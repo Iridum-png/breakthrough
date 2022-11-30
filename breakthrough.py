@@ -34,24 +34,17 @@ class Breakthrough():
                     print(self.__sequence.GetCardDisplay())
                     print(f"Cards remaining in deck: {self.__deck.GetNumberOfCards()}")
                     print(self.__hand.GetCardDisplay())
-                    menu_choice = self.__GetChoice()
+                    menu_choice = self.__get_choice()
                     if menu_choice == "D":
                         print(self.__discard.GetCardDisplay())
                     elif menu_choice == "U":
-                        card_choice  = self.__GetCardChoice()
-                        discard_or_play = self.__GetDiscardOrPlayChoice()
+                        card_choice = self.__get_card_choice()
+                        discard_or_play = self.__get_discard_or_play_choice()
                         if discard_or_play == "D":
-                            self.__MoveCard(self.__hand, self.__discard, self.__hand.GetCardNumberAt(card_choice - 1))
-                            self.__GetCardFromDeck(card_choice)
+                            self.__move_card(self.__hand, self.__discard, self.__hand.GetCardNumberAt(card_choice - 1))
+                            self.__get_card_from_deck(card_choice)
                         elif discard_or_play == "P":
                             self.__play_card_to_sequence(card_choice)
-                    elif menu_choice == "P":
-                        if not self.__currentl_lock.GetPeekUsed():
-                            for i in range(3):
-                                print(self.__deck.GetCardDescriptionAt(i), end = " ")
-                            print()
-                    # elif menu_choice == "S":
-                        # self.__SaveGame()
                     if self.__currentl_lock.GetLockSolved():
                         self.__lock_solved = True
                         self.__process_lock_solved()
@@ -63,9 +56,9 @@ class Breakthrough():
         self.__score += 10
         print("Lock has been solved.  Your score is now:", self.__score)
         while self.__discard.GetNumberOfCards() > 0:
-            self.__MoveCard(self.__discard, self.__deck, self.__discard.GetCardNumberAt(0))
+            self.__move_card(self.__discard, self.__deck, self.__discard.GetCardNumberAt(0))
         self.__deck.Shuffle()
-        self.__currentl_lock = self.__GetRandomLock()
+        self.__currentl_lock = self.__get_random_lock()
 
     def __check_if_player_has_lost(self):
         if self.__deck.GetNumberOfCards() == 0:
@@ -80,22 +73,22 @@ class Breakthrough():
             if not self.__load_game("game1.txt"):
                 self.__game_over = True
         else:
-            self.__CreateStandardDeck()
+            self.__create_standard_deck()
             self.__deck.Shuffle()
             for _ in range(5):
-                self.__MoveCard(self.__deck, self.__hand, self.__deck.GetCardNumberAt(0))
-            self.__AddDifficultyCardsToDeck()
+                self.__move_card(self.__deck, self.__hand, self.__deck.GetCardNumberAt(0))
+            self.__add_difficulty_cards_to_deck()
             self.__deck.Shuffle()
-            self.__currentl_lock = self.__GetRandomLock()
-    
+            self.__currentl_lock = self.__get_random_lock()
+
     def __play_card_to_sequence(self, card_choice):
         if self.__sequence.GetNumberOfCards() > 0:
             if self.__hand.GetCardDescriptionAt(card_choice - 1)[0] != self.__sequence.GetCardDescriptionAt(self.__sequence.GetNumberOfCards() - 1)[0]:
-                self.__score += self.__MoveCard(self.__hand, self.__sequence, self.__hand.GetCardNumberAt(card_choice - 1))
-                self.__GetCardFromDeck(card_choice)
+                self.__score += self.__move_card(self.__hand, self.__sequence, self.__hand.GetCardNumberAt(card_choice - 1))
+                self.__get_card_from_deck(card_choice)
         else:
-            self.__score += self.__MoveCard(self.__hand, self.__sequence, self.__hand.GetCardNumberAt(card_choice - 1))
-            self.__GetCardFromDeck(card_choice)
+            self.__score += self.__move_card(self.__hand, self.__sequence, self.__hand.GetCardNumberAt(card_choice - 1))
+            self.__get_card_from_deck(card_choice)
         if self.__check_if_lock_challenge_met():
             print()
             print("A challenge on the lock has been met.")
@@ -137,21 +130,21 @@ class Breakthrough():
             if char == "Y":
                 self.__currentl_lock.SetChallengeMet(count, True)
 
-    def __load_game(self, file_name):
+    def __load_game(self, filename):
         try:
-            with open(file_name, encoding='utf-8-sig') as f:          
-                line_from_file = f.readline().rstrip()
+            with open(filename, encoding='utf-8-sig') as file:
+                line_from_file = file.readline().rstrip()
                 self.__score = int(line_from_file)
-                line_from_file = f.readline().rstrip()
-                ine_from_file2 = f.readline().rstrip()
+                line_from_file = file.readline().rstrip()
+                ine_from_file2 = file.readline().rstrip()
                 self.__setup_lock(line_from_file, ine_from_file2)
-                line_from_file = f.readline().rstrip()
+                line_from_file = file.readline().rstrip()
                 self.__setup_card_collection_from_game_file(line_from_file, self.__hand)
-                line_from_file = f.readline().rstrip()
+                line_from_file = file.readline().rstrip()
                 self.__setup_card_collection_from_game_file(line_from_file, self.__sequence)
-                line_from_file = f.readline().rstrip()
+                line_from_file = file.readline().rstrip()
                 self.__setup_card_collection_from_game_file(line_from_file, self.__discard)
-                line_from_file = f.readline().rstrip()
+                line_from_file = file.readline().rstrip()
                 self.__setup_card_collection_from_game_file(line_from_file, self.__deck)
                 return True
         except FileNotFoundError:
@@ -162,68 +155,65 @@ class Breakthrough():
         filename = "locks.txt"
         self.__locks = []
         try:
-            with open(filename, encoding="utf-8-sig") as f: 
-                LineFromFile = f.readline().rstrip()
-                while LineFromFile != "":
-                    Challenges = LineFromFile.split(";")
-                    LockFromFile = Lock()
-                    for C in Challenges:
-                        Conditions = C.split(",")
-                        LockFromFile.AddChallenge(Conditions)
-                    self.__locks.append(LockFromFile)
-                    LineFromFile = f.readline().rstrip()
+            with open(filename, encoding="utf-8-sig") as file: 
+                line_from_file = file.readline().rstrip()
+                while line_from_file != "":
+                    challenges = line_from_file.split(";")
+                    lock_from_file = Lock()
+                    for C in challenges:
+                        conditions = C.split(",")
+                        lock_from_file.AddChallenge(conditions)
+                    self.__locks.append(lock_from_file)
+                    line_from_file = file.readline().rstrip()
         except FileNotFoundError:
             print("File not loaded")
 
-    def __GetRandomLock(self):
+    def __get_random_lock(self):
         return self.__locks[random.randint(0, len(self.__locks) - 1)]
 
-    def __GetCardFromDeck(self, CardChoice):
+    def __get_card_from_deck(self, card_choice):
         if self.__deck.GetNumberOfCards() > 0:
             if self.__deck.GetCardDescriptionAt(0) == "Dif":
-                CurrentCard = self.__deck.RemoveCard(self.__deck.GetCardNumberAt(0))
+                current_card = self.__deck.RemoveCard(self.__deck.GetCardNumberAt(0))
                 print()
                 print("Difficulty encountered!")
                 print(self.__hand.GetCardDisplay())
                 print("To deal with this you need to either lose a key ", end='')
-                Choice = input("(enter 1-5 to specify position of key) or (D)iscard five cards from the deck:> ")
+                choice = input("(enter 1-5 to specify position of key) or (D)iscard five cards from the deck:> ")
                 print()
-                self.__discard.AddCard(CurrentCard)
-                CurrentCard.Process(self.__deck, self.__discard, self.__hand, self.__sequence, self.__currentl_lock, Choice, CardChoice)
+                self.__discard.AddCard(current_card)
+                current_card.Process(self.__deck, self.__discard, self.__hand, self.__sequence, self.__currentl_lock, choice, card_choice)
         while self.__hand.GetNumberOfCards() < 5 and self.__deck.GetNumberOfCards() > 0:
             if self.__deck.GetCardDescriptionAt(0) == "Dif":
-                self.__MoveCard(self.__deck, self.__discard, self.__deck.GetCardNumberAt(0))
+                self.__move_card(self.__deck, self.__discard, self.__deck.GetCardNumberAt(0))
                 print("A difficulty card was discarded from the deck when refilling the hand.")
             else:
-                self.__MoveCard(self.__deck, self.__hand, self.__deck.GetCardNumberAt(0))
+                self.__move_card(self.__deck, self.__hand, self.__deck.GetCardNumberAt(0))
         if self.__deck.GetNumberOfCards() == 0 and self.__hand.GetNumberOfCards() < 5:
             self.__game_over = True
 
-    def __GetCardChoice(self):
+    def __get_card_choice(self):
         choice = None
         while choice is None:
-            try: 
+            try:
                 choice = int(input("Enter a number between 1 and 5 to specify card to use:> "))
             except TypeError:
                 pass
         return choice
 
-    def __GetDiscardOrPlayChoice(self):
-        Choice = input("(D)iscard or (P)lay?:> ").upper()
-        return Choice
+    def __get_discard_or_play_choice(self):
+        choice = input("(D)iscard or (P)lay?:> ").upper()
+        return choice
 
-    def __GetChoice(self):
+    def __get_choice(self):
         print()
-        if self.__currentl_lock.GetPeekUsed():
-            return self.__GetDiscardOrPlayChoice()
-        Choice = input("(D)iscard inspect, (U)se card, (P)eek:> ").upper()
-        return Choice
+        return self.__get_discard_or_play_choice()
 
-    def __AddDifficultyCardsToDeck(self):
+    def __add_difficulty_cards_to_deck(self):
         for _ in range(5):
             self.__deck.AddCard(DifficultyCard())
 
-    def __CreateStandardDeck(self):
+    def __create_standard_deck(self):
         for _ in range(5):
             new_card = ToolCard("P", "a")
             self.__deck.AddCard(new_card)
@@ -245,22 +235,22 @@ class Breakthrough():
             new_card = ToolCard("K", "c")
             self.__deck.AddCard(new_card)
 
-    def __MoveCard(self, FromCollection, ToCollection, CardNumber):
-        Score  = 0
-        if FromCollection.GetName() == "HAND" and ToCollection.GetName() == "SEQUENCE":
-            CardToMove = FromCollection.RemoveCard(CardNumber)
+    def __move_card(self, from_collection, to_collection, CardNumber):
+        Score = 0
+        if from_collection.GetName() == "HAND" and to_collection.GetName() == "SEQUENCE":
+            CardToMove = from_collection.RemoveCard(CardNumber)
             if CardToMove is not None:
-                ToCollection.AddCard(CardToMove)
+                to_collection.AddCard(CardToMove)
                 Score = CardToMove.GetScore()
         else:
-            CardToMove = FromCollection.RemoveCard(CardNumber)
+            CardToMove = from_collection.RemoveCard(CardNumber)
             if CardToMove is not None:
-                ToCollection.AddCard(CardToMove)
+                to_collection.AddCard(CardToMove)
         return Score
 
     def save_game(self):
-        file_name = input("Enter file name:> ")
-        with open(file_name, "w", encoding='utf-8-sig') as f:
+        filename = input("Enter file name:> ")
+        with open(filename, "w", encoding='utf-8-sig') as f:
             f.write(str(self.__score) + "\n")
             f.write(str(self.__game_over) + "\n")
 
@@ -285,7 +275,6 @@ class Challenge():
 class Lock():
     def __init__(self):
         self._Challenges = []
-        self._PeekUsed = False
 
     def AddChallenge(self, Condition):
         C = Challenge()
@@ -326,14 +315,8 @@ class Lock():
     def SetChallengeMet(self, Pos, Value):
         self._Challenges[Pos].SetMet(Value)
 
-    def SetPeekUsed(self):
-        pass
-
     def GetChallengeMet(self, Pos): 
         return self._Challenges[Pos].GetMet()
-
-    def GetPeekUsed(self):
-        return self._PeekUsed
 
     def GetNumberOfChallenges(self): 
         return len(self._Challenges)    
@@ -349,7 +332,7 @@ class Card():
     def GetScore(self):
         return self._Score
 
-    def Process(self, Deck, Discard, Hand, Sequence, CurrentLock, Choice, CardChoice):
+    def Process(self, Deck, Discard, Hand, Sequence, CurrentLock, choice, Cardchoice):
         pass
 
     def GetCardNumber(self): 
@@ -393,20 +376,20 @@ class DifficultyCard(Card):
     def GetDescription(self):
         return self._CardType
 
-    def Process(self, Deck, Discard, Hand, Sequence, CurrentLock, Choice, CardChoice):
-        ChoiceAsInteger = None
+    def Process(self, Deck, Discard, Hand, Sequence, CurrentLock, choice, Cardchoice):
+        choiceAsInteger = None
         try:
-            ChoiceAsInteger = int(Choice)
+            choiceAsInteger = int(choice)
         except:
             pass
-        if ChoiceAsInteger is not None:
-            if ChoiceAsInteger >= 1 and ChoiceAsInteger <= 5:
-                if ChoiceAsInteger >= CardChoice:
-                    ChoiceAsInteger -= 1
-                if ChoiceAsInteger > 0:
-                    ChoiceAsInteger -= 1
-                if Hand.GetCardDescriptionAt(ChoiceAsInteger)[0] == "K":
-                    CardToMove = Hand.RemoveCard(Hand.GetCardNumberAt(ChoiceAsInteger))
+        if choiceAsInteger is not None:
+            if choiceAsInteger >= 1 and choiceAsInteger <= 5:
+                if choiceAsInteger >= Cardchoice:
+                    choiceAsInteger -= 1
+                if choiceAsInteger > 0:
+                    choiceAsInteger -= 1
+                if Hand.GetCardDescriptionAt(choiceAsInteger)[0] == "K":
+                    CardToMove = Hand.RemoveCard(Hand.GetCardNumberAt(choiceAsInteger))
                     Discard.AddCard(CardToMove)
                     return
         Count = 0
@@ -444,8 +427,8 @@ class CardCollection():
             self._Cards[RNo2] = TempCard
 
     def RemoveCard(self, CardNumber):
-        CardFound  = False
-        Pos  = 0
+        CardFound = False
+        Pos = 0
         while Pos < len(self._Cards) and not CardFound:
             if self._Cards[Pos].GetCardNumber() == CardNumber:
                 CardToGet = self._Cards[Pos]
@@ -467,14 +450,14 @@ class CardCollection():
         else:
             CardDisplay += "\n" + "\n"
         LineOfDashes = ""
-        CARDS_PER_LINE  = 10
+        CARDS_PER_LINE = 10
         if len(self._Cards) > CARDS_PER_LINE:
             LineOfDashes = self.__CreateLineOfDashes(CARDS_PER_LINE)
         else:
             LineOfDashes = self.__CreateLineOfDashes(len(self._Cards))
         CardDisplay += LineOfDashes + "\n"
         Complete = False
-        Pos  = 0
+        Pos = 0
         while not Complete:
             CardDisplay += "| " + self._Cards[Pos].GetDescription() + " "
             Pos += 1
